@@ -11,14 +11,14 @@ This repository contains a Flask‑based web application that grades handwritten
 
 ### Generative grading pipeline
 
-* **Summary and analysis** – The application builds prompts instructing Gemini to generate (1) a concise summary of the student’s solution and (2) a detailed analysis rating each rubric item as `excellent`, `partial`, `unsatisfactory` or `missing`【662982326478485†screenshot】.  The prompts discourage hallucination and ask the model to base its rating strictly on the uploaded solution【310359712025104†screenshot】.  The official rubric is read from `solution_with_rubric_1.txt`.
-* **Fuzzy matching cache** – To ensure consistent grading and reduce API calls, the app stores previous evaluations in a cache.  Before sending a new request to Gemini, the student’s solution summary is normalised and compared to cached summaries using RapidFuzz.  If the similarity exceeds a threshold, the cached grade is reused【662982326478485†screenshot】.
+* **Summary and analysis** – The application builds prompts instructing Gemini to generate (1) a concise summary of the student’s solution and (2) a detailed analysis rating each rubric item as `excellent`, `partial`, `unsatisfactory` or `missing`.  The prompts discourage hallucination and ask the model to base its rating strictly on the uploaded solution.  The official rubric is read from `solution_with_rubric_1.txt`.
+* **Fuzzy matching cache** – To ensure consistent grading and reduce API calls, the app stores previous evaluations in a cache.  Before sending a new request to Gemini, the student’s solution summary is normalised and compared to cached summaries using RapidFuzz.  If the similarity exceeds a threshold, the cached grade is reused.
 * **Score computation** – The ratings returned by Gemini are mapped to numerical scores and aggregated.  The app computes an overall percentage and categorises performance as *Unsatisfactory*, *Satisfactory* or *Excellent*.  All grades are recorded in `grades.csv`.
 
 ### User interface and feedback
 
 * **Result page** – After grading, the app displays a result page showing the overall score, per‑rubric ratings and a performance message.  Students can see the generated summary and analysis and may leave anonymous comments.  Evaluations can also be downloaded for further review.
-* **Admin controls** – A simple admin dashboard (protected by the `ADMIN_PASSWORD` environment variable) allows administrators to view submissions, reset attempts for a given problem, and upload new rubric files【746989183900810†screenshot】.
+* **Admin controls** – A simple admin dashboard (protected by the `ADMIN_PASSWORD` environment variable) allows administrators to view submissions, reset attempts for a given problem, and upload new rubric files.
 
 ## Installation
 
