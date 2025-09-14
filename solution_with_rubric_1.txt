@@ -1,0 +1,42 @@
+Anti-Helmholtz Coils
+---------------------------------------------------
+This is not student's solution. Official solution starts here.  
+
+
+---------------------------------------------------
+Grading Rubric
+---------------------------------------------------
+
+Total Points: 100
+
+Rubric Item 1: Correctly stated Biot-Savart Law (15 pts)
+Excellent (15 pts): Student clearly wrote the complete Biot-Savart Law including constants, vector direction, and the integral.
+Partial (8 pts): Student attempted the Biot-Savart Law but omitted key constants or used incorrect notation.
+Unsatisfactory (0 pts): Biot-Savart Law not written or fundamentally incorrect.
+
+Rubric Item 2: Correctly used the differential length vector (20 pts)
+Excellent (20 pts): Student correctly represented \(d\vec{s}\) as a tangential element in cylindrical coordinates.
+Partial (15 pts): Student attempted \(d\vec{s}\) but with mistakes in direction or magnitude.
+Unsatisfactory (0 pts): \(d\vec{s}\) not written or incorrect.
+
+Rubric Item 3: Correctly wrote the vector from source to field point (15 pts)
+Excellent (15 pts): Student defined the source-to-field vector, combining radial and vertical components.
+Partial (8 pts): Attempted vector but direction incorrect.
+Unsatisfactory (0 pts): No valid vector expression.
+
+Rubric Item 4: Correctly shown radial component cancellation (10 pts)
+Excellent (10 pts): Student showed that radial components cancel, leaving only the vertical field.
+Partial (5 pts): Student did not explicitly show how radial components cancel but shown integrals with radial component going to zero.
+Unsatisfactory (0 pts): No symmetry argument or incorrect.
+
+Rubric Item 5: Correctly took derivative of \(B_z\) with respect to \(z\) (20 pts)
+Excellent (20 pts): Student correctly applied the chain rule to \(d/dz [ const / (R^2 + (z \pm R/2)^2 )^{3/2} ]\) and evaluated at \(z = 0\).
+Partial (15 pts): Attempted derivative but with errors.
+Unsatisfactory (0 pts): No derivative.
+
+Rubric Item 6: Used correct formula for magnetic dipole force (20 pts)
+Excellent (20 pts): Student used \(\vec{F} = \nabla (\vec{m} \cdot \vec{B})\), aligned \(\vec{m}\) along \(\hat{z}\), and applied the gradient to \(B_z\).
+Partial (15 pts): Referenced formula but applied incorrectly.
+Unsatisfactory (0 pts): No mention of formula or incorrect.
+
+
