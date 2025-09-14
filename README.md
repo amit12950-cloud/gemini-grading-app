@@ -1,41 +1,63 @@
 # Gemini Grading App
 
-This repository contains a Flask‑based web application that grades student handwritten solutions to math problems using Google’s **Gemini** generative AI model (via the `google‑generativeai` client library).  The app authenticates users via MIT email and a unique access code, converts uploaded images to text, compares the student’s solution against an official rubric using the Gemini model, calculates scores, and stores results.
+This repository contains a Flask‑based web application that grades handwritten student solutions to math problems using Google’s **Generative AI** (Gemini) model via the `google‑generativeai` client library.  Students authenticate with their MIT email address and a unique access code, upload images of their work, and the application automatically evaluates the submission against a rubric, calculates a score and presents detailed feedback.
 
-## Features
+## How it works
 
-* **User authentication** – students sign in with their MIT email and a unique access code stored in `userdatabase.csv`.
-* **Handwritten solution upload** – users can upload one or more images of their handwritten solution for each problem.
-* **Image to LaTeX conversion** – the uploaded images are sent to a conversion prompt that extracts text and equations; this part requires an external model or API capable of OCR and LaTeX generation (not included in this repo).
-* **Gemini‑based grading** – the student’s solution is compared against the official rubric using Google’s Gemini generative model.  The code leverages the `google‑generativeai` library to generate evaluations and applies heuristics based on cosine similarity and approximate caching to produce consistent grading.
-* **Result reporting** – the app displays detailed scoring feedback and stores grades in `grades.csv` for record keeping.
+### Authentication and uploading
+
+* **User login** – Only registered students can access grading functionality.  The app uses Flask‑Login and checks that the email ends in `@mit.edu` and that the supplied access code matches the entry in `userdatabase.csv`.
+* **Image upload** – Students may upload one or more images of their handwritten solution to a problem.  The server temporarily stores the images and passes them through an external OCR/LaTeX conversion service.  A prompt (`conversion_prompt`) instructs the model to extract text and LaTeX from the images (integration with GPT‑4 Vision or another OCR service is required and is *not* included).
+
+### Generative grading pipeline
+
+* **Summary and analysis** – The application builds prompts instructing Gemini to generate (1) a concise summary of the student’s solution and (2) a detailed analysis rating each rubric item as `excellent`, `partial`, `unsatisfactory` or `missing`【662982326478485†screenshot】.  The prompts discourage hallucination and ask the model to base its rating strictly on the uploaded solution【310359712025104†screenshot】.  The official rubric is read from `solution_with_rubric_1.txt`.
+* **Fuzzy matching cache** – To ensure consistent grading and reduce API calls, the app stores previous evaluations in a cache.  Before sending a new request to Gemini, the student’s solution summary is normalised and compared to cached summaries using RapidFuzz.  If the similarity exceeds a threshold, the cached grade is reused【662982326478485†screenshot】.
+* **Score computation** – The ratings returned by Gemini are mapped to numerical scores and aggregated.  The app computes an overall percentage and categorises performance as *Unsatisfactory*, *Satisfactory* or *Excellent*.  All grades are recorded in `grades.csv`.
+
+### User interface and feedback
+
+* **Result page** – After grading, the app displays a result page showing the overall score, per‑rubric ratings and a performance message.  Students can see the generated summary and analysis and may leave anonymous comments.  Evaluations can also be downloaded for further review.
+* **Admin controls** – A simple admin dashboard (protected by the `ADMIN_PASSWORD` environment variable) allows administrators to view submissions, reset attempts for a given problem, and upload new rubric files【746989183900810†screenshot】.
 
 ## Installation
 
-1. **Clone the repository** (or download the source code) and navigate into it:
+1. **Clone the repository** and change into its directory:
 
    ```bash
    git clone https://github.com/amit12950-cloud/gemini-grading-app.git
    cd gemini-grading-app
    ```
 
-2. **Create and activate a Python virtual environment** (recommended):
+2. **Create and activate a virtual environment** (optional but recommended):
 
    ```bash
    python3 -m venv venv
    source venv/bin/activate
    ```
 
-3. **Install the dependencies** using the provided requirements file:
+3. **Install dependencies** using the provided requirements file:
 
    ```bash
    pip install -r requirements.txt
    ```
 
-4. **Configure Google Cloud authentication**.  The application uses Google’s Generative AI service via Vertex AI.  Before running the app you must:
-   * Authenticate to Google Cloud via `gcloud auth login` or set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to point to a JSON service account key.
-   * Set `GOOGLE_PROJECT_ID` to your Google Cloud project ID.
-   * Optionally set `GOOGLE_REGION` (defaults to `us‑central1`).
+4. **Configure Google Cloud authentication**.  The app uses Google’s Generative AI service via Vertex AI.
+
+   * Either run `gcloud auth login` and ensure your default account has access to the Vertex AI API, **or** set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable to point to a JSON service account key.
+   * Set `GOOGLE_PROJECT_ID` to your Google Cloud project ID.  Optionally set `GOOGLE_REGION` (defaults to `us‑central1`).
+   * Provide `APP_SECRET_KEY` for Flask session security and `ADMIN_PASSWORD` for admin routes.
+
+   For example:
+
+   ```bash
+   export GOOGLE_PROJECT_ID=<your‑gcp‑project>
+   export GOOGLE_REGION=us‑central1
+   export APP_SECRET_KEY="<generate‑a‑random‑secret>"
+   export ADMIN_PASSWORD="<admin‑password>"
+   # If using a service account key:
+   export GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json
+   ```
 
 5. **Run the application**:
 
@@ -43,18 +65,20 @@ This repository contains a Flask‑based web application that grades student han
    python geminiapp.py
    ```
 
-   By default the Flask development server will run on port 5000.  Open `http://localhost:5000` in your web browser and log in with one of the email/code pairs from `userdatabase.csv`.
+   The development server runs on port 5000.  Navigate to `http://localhost:5000` in your browser and log in using an email/code pair from `userdatabase.csv`.
 
 ## Repository structure
 
-* `geminiapp.py` – main Flask server for the Gemini grading app.  This version has been sanitised to avoid hard‑coded project IDs and reads the Google project ID and region from environment variables.
-* `requirements.txt` – lists the Python dependencies required to run the project.
-* `grades.csv` – CSV file used to store grading records; initially empty.
-* `solution_with_rubric_1.txt` – official rubric used to evaluate the first problem (additional rubric files can be added as `solution_with_rubric_2.txt`, etc.).
-* `userdatabase.csv` – contains user email addresses and corresponding access codes.
-* `templates/` – HTML templates for the user interface.
+- `geminiapp.py` – main Flask server implementing authentication, file uploads, prompts for summary and rubric analysis, fuzzy matching cache and result rendering.  The code reads project ID and region from environment variables and avoids hard‑coded secrets.
+- `requirements.txt` – Python packages required to run the Gemini grading app.
+- `grades.csv` – persistent storage for grading records; initially empty.
+- `solution_with_rubric_1.txt` – official rubric and sample solution for the first problem.  Additional rubric files can be added as `solution_with_rubric_2.txt`, etc.
+- `userdatabase.csv` – list of user email addresses and corresponding access codes.
+- `templates/` – HTML templates for login, upload, result view, admin dashboard and other pages.
 
 ## Notes
 
-* The OCR/LaTeX conversion step for handwritten images is **not** implemented in this repository.  You will need to integrate an external service or model (such as a hosted GPT‑4 Vision API) to convert images into LaTeX and plain text.
-* For production deployment, ensure you set a secure `app.secret_key` in `geminiapp.py` and configure HTTPS.  This project is provided for educational purposes and should be adapted and secured before real use.
+- **OCR/LaTeX conversion** is not included.  The grading pipeline assumes you provide a service (e.g., GPT‑4 Vision or another OCR model) that converts uploaded images into text and LaTeX.  The `conversion_prompt` used to call the service is defined in `geminiapp.py` but you must implement the actual API call.
+- This repository has been sanitised to avoid committing credentials or hard‑coded project identifiers.  Always keep your API keys and service account files secure.
+- For production use, set a strong `APP_SECRET_KEY`, configure HTTPS and deploy via a production WSGI server such as Gunicorn.
+
