@@ -78,7 +78,5 @@ This repository contains a Flask‑based web application that grades handwritten
 
 ## Notes
 
-- **OCR/LaTeX conversion** is not included.  The grading pipeline assumes you provide a service (e.g., GPT‑4 Vision or another OCR model) that converts uploaded images into text and LaTeX.  The `conversion_prompt` used to call the service is defined in `geminiapp.py` but you must implement the actual API call.
-- This repository has been sanitised to avoid committing credentials or hard‑coded project identifiers.  Always keep your API keys and service account files secure.
 - For production use, set a strong `APP_SECRET_KEY`, configure HTTPS and deploy via a production WSGI server such as Gunicorn.
 
